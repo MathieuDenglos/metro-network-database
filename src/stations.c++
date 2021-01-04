@@ -1,4 +1,5 @@
 #include "stations.h"
+#include "network.h"
 
 #include <string>
 #include <iostream>
@@ -33,6 +34,59 @@ namespace STATIONS
         delete existing_stations;
 
         return stations_count;
+    }
+
+    void show_line_stations(sql::Statement *stmt)
+    {
+        //outputs all the line and returns if none exists
+        if (NETWORK::output_lines(stmt) == 0)
+            return;
+
+        std::cout << "\nPlease select enter the line id or name to show the stations\n"
+                  << std::flush;
+        std::string reply;
+        std::cin >> reply;
+
+        sql::ResultSet *searched_line;
+        try
+        {
+            //convert the reply to an int and search by line_id if std::stoi() doesn't throw
+            int searched_id = std::stoi(reply);
+            searched_line = stmt->executeQuery("SELECT * FROM network WHERE line_id = " + reply + " ;");
+        }
+        catch (const std::invalid_argument &e)
+        {
+            //if the function throw, it means that the user did a research by line_name
+            searched_line = stmt->executeQuery("SELECT * FROM network WHERE line_name = \'" + reply + "\' ;");
+        }
+        catch (const std::out_of_range &e)
+        {
+            //if the given value is too big, send an error messqage and return
+            std::cout << "\nThe entered line doesn't exist\n"
+                      << std::flush;
+            delete searched_line;
+            return;
+        }
+
+        //if the query wasn't successful return
+        if (searched_line->rowsCount() == 0)
+        {
+            std::cout << "\nNo line found with given research, try again later\n"
+                      << std::flush;
+            delete searched_line;
+            return;
+        }
+        std::cout << "\e[1;1H\e[2J";
+
+        //if the query was succesful, ask the user a verification for each
+        while (searched_line->next())
+        {
+            std::cout << "\n\n\nStations of line " << searched_line->getString("line_name")
+                      << " (" << searched_line->getInt("line_id") << "\n\n"
+                      << std::flush;
+            STATIONS::output_stations(stmt, searched_line->getInt("line_id"));
+        }
+        delete searched_line;
     }
 
     void append_station(sql::Connection *con,
