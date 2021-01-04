@@ -56,7 +56,7 @@ namespace GUI
             NETWORK::new_line(con, stmt);
             break;
         case 2:
-            std::cout << "to implement" << std::endl;
+            NETWORK::remove_line(con, stmt);
             break;
         case 3:
             std::cout << "to implement" << std::endl;

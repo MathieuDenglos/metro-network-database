@@ -1,9 +1,40 @@
 #include "stations.h"
 
 #include <string>
+#include <iostream>
+#include <iomanip>
 
 namespace STATIONS
 {
+    std::size_t output_stations(sql::Statement *stmt,
+                                int line_id)
+    {
+        //first collect the list of the already existing stations
+        sql::ResultSet *existing_stations;
+        existing_stations = stmt->executeQuery("SELECT * FROM stations WHERE line_id = " + std::to_string(line_id) + " ORDER BY station_id ASC");
+        std::size_t stations_count = existing_stations->rowsCount();
+        //print all previously added stations of the line
+        if (stations_count > 0)
+        {
+            std::cout << "List of already existing stations in the line\n\n"
+                      << "line  station  station_name          seconds to next station\n";
+            while (existing_stations->next())
+            {
+                std::cout << " " << std::setw(3) << std::right << std::setfill('0') << existing_stations->getInt("line_id")
+                          << "      " << std::setw(3) << std::right << std::setfill('0') << existing_stations->getInt("station_id")
+                          << "  " << std::setw(20) << std::left << std::setfill(' ') << existing_stations->getString("station_name")
+                          << "  " << std::setw(4) << std::right << std::setfill('0') << existing_stations->getString("travel_time_to_next_station") << "s\n";
+            }
+            std::cout << std::flush;
+        }
+        else
+            std::cout << "line " << line_id << " has no stations yet\n"
+                      << std::flush;
+        delete existing_stations;
+
+        return stations_count;
+    }
+
     void append_station(sql::Connection *con,
                         sql::Statement *stmt,
                         int line_id,

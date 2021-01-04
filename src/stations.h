@@ -5,6 +5,9 @@
 
 namespace STATIONS
 {
+    std::size_t output_stations(sql::Statement *stmt,
+                                int line_id);
+
     void append_station(sql::Connection *con,
                         sql::Statement *stmt,
                         int line_id,

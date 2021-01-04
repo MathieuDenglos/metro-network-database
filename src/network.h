@@ -14,8 +14,13 @@ namespace
 
 namespace NETWORK
 {
+    std::size_t output_lines(sql::Statement *stmt);
+
     void new_line(sql::Connection *con,
                   sql::Statement *stmt);
+
+    void remove_line(sql::Connection *con,
+                     sql::Statement *stmt);
 } // namespace NETWORK
 
 #endif //NETWORK_H
