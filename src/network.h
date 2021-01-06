@@ -14,11 +14,14 @@ namespace
 
 namespace NETWORK
 {
+    //general input, output function
     std::size_t output_lines(sql::Statement *stmt);
+    std::size_t ask_line(sql::ResultSet **searched_line,
+                         sql::Statement *stmt);
 
-    void new_line(sql::Connection *con,
+    //callable functions
+    void add_line(sql::Connection *con,
                   sql::Statement *stmt);
-
     void remove_line(sql::Connection *con,
                      sql::Statement *stmt);
 } // namespace NETWORK

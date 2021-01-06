@@ -56,7 +56,7 @@ namespace GUI
         switch (choice)
         {
         case 1:
-            NETWORK::new_line(con, stmt);
+            NETWORK::add_line(con, stmt);
             break;
         case 2:
             NETWORK::output_lines(stmt);
@@ -71,7 +71,7 @@ namespace GUI
             STATIONS::show_line_stations(stmt);
             break;
         case 6:
-            std::cout << "to implement" << std::endl;
+            STATIONS::remove_station(stmt);
             break;
         }
     }

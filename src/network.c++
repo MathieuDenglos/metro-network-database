@@ -8,6 +8,7 @@
 
 namespace NETWORK
 {
+    //general input, output functions
     std::size_t output_lines(sql::Statement *stmt)
     {
         //first grab the already existing lines
@@ -27,12 +28,41 @@ namespace NETWORK
             std::cout << "   " << std::setw(3) << std::right << std::setfill('0') << existing_lines->getInt("line_id")
                       << "  " << std::setw(20) << std::left << std::setfill(' ') << existing_lines->getString("line_name") << '\n';
         }
-        delete existing_lines;
 
+        delete existing_lines;
         return lines_count;
     }
 
-    void new_line(sql::Connection *con,
+    std::size_t ask_line(sql::ResultSet **searched_line,
+                         sql::Statement *stmt)
+    {
+        //Ask for the searched line
+        std::string reply;
+        std::cout << "Entre the name or number of the line you want to remove\n"
+                  << std::flush;
+        std::cin >> reply;
+
+        try
+        {
+            //convert the reply to an int and search by line_id if std::stoi() doesn't throw
+            int searched_id = std::stoi(reply);
+            *searched_line = stmt->executeQuery("SELECT * FROM network WHERE line_id = " + reply + " ;");
+        }
+        catch (const std::invalid_argument &e)
+        {
+            //if the function throw, it means that the user did a research by line_name
+            *searched_line = stmt->executeQuery("SELECT * FROM network WHERE line_name = \'" + reply + "\' ;");
+        }
+        catch (const std::out_of_range &e)
+        {
+            //if the given value is too big, return an empty list
+            *searched_line = stmt->executeQuery("SELECT NULL LIMIT 0;");
+        }
+        return (*searched_line)->rowsCount();
+    }
+
+    //callable functions
+    void add_line(sql::Connection *con,
                   sql::Statement *stmt)
     {
         std::cout << "\e[1;1H\e[2J";
@@ -54,19 +84,32 @@ namespace NETWORK
                 std::cout << "this line already exists please select another line id\n"
                           << std::flush;
         } while (lines_with_id->getInt(1) != 0);
+        delete lines_with_id;
 
-        //Ask for the station name (has to be under 20 characters)
+        //Ask for the station name (has to be under 20 characters and unique)
         std::cout << "Provide a name for this new line\n"
                   << std::flush;
         std::string new_line_name;
-        std::cin >> new_line_name;
-        if (new_line_name.size() > 20)
-            new_line_name.erase(new_line_name.begin() + 19, new_line_name.end());
+        sql::ResultSet *lines_with_name;
+        do
+        {
+            std::cin >> new_line_name;
+            if (new_line_name.size() > 20)
+                new_line_name.erase(new_line_name.begin() + 19, new_line_name.end());
+            lines_with_name = stmt->executeQuery("SELECT COUNT(line_id) FROM network WHERE line_name = \'" + new_line_name + "\';");
+            lines_with_name->next();
+            if (lines_with_name->getInt(1) != 0)
+                std::cout << "Another line already have this name, please select another name for the line\n"
+                          << std::flush;
+        } while (lines_with_name->getInt(1) != 0);
+        delete lines_with_name;
 
-        //Insert the new line
+        //create the prepared statement to prevent SQLinjections while insertine the line
         sql::PreparedStatement *insert_line_stmt;
         insert_line_stmt = con->prepareStatement("INSERT INTO network(line_id, line_name)"
                                                  "   VALUES (?, ?)");
+
+        //Fill the different elements and execute the insertion
         insert_line_stmt->setInt(1, new_line_id);
         insert_line_stmt->setString(2, new_line_name);
         insert_line_stmt->execute();
@@ -83,50 +126,23 @@ namespace NETWORK
         if (NETWORK::output_lines(stmt) == 0)
             return;
 
-        std::string reply;
-        std::cout << "Entre the name or number of the line you want to remove\n"
-                  << std::flush;
-        std::cin >> reply;
-
+        //ask for the line to search, and either output an error message or continue
         sql::ResultSet *searched_line;
-        try
-        {
-            //convert the reply to an int and search by line_id if std::stoi() doesn't throw
-            int searched_id = std::stoi(reply);
-            searched_line = stmt->executeQuery("SELECT * FROM network WHERE line_id = " + reply + " ;");
-        }
-        catch (const std::invalid_argument &e)
-        {
-            //if the function throw, it means that the user did a research by line_name
-            searched_line = stmt->executeQuery("SELECT * FROM network WHERE line_name = \'" + reply + "\' ;");
-        }
-        catch (const std::out_of_range &e)
-        {
-            //if the given value is too big, send an error messqage and return
-            std::cout << "\nThe entered id is too big, please try again later\n"
-                      << std::flush;
-            delete searched_line;
-            return;
-        }
-
-        //if the query wasn't successful return
-        if (searched_line->rowsCount() == 0)
-        {
+        if (NETWORK::ask_line(&searched_line, stmt) == 0)
             std::cout << "\nNo line found with given research, try again later\n"
                       << std::flush;
-            delete searched_line;
-            return;
-        }
-
-        //if the query was succesful, ask the user a verification for each
-        while (searched_line->next())
+        else
         {
+            //print all the stations within the line
+            searched_line->next();
             std::cout << "\e[1;1H\e[2J";
             int station_in_line = STATIONS::output_stations(stmt, searched_line->getInt("line_id"));
             std::cout << "\nBy deleting the line " << searched_line->getString("line_name") << " (" << searched_line->getInt("line_id")
                       << "), you will also remove : " << station_in_line
                       << " stations.\nTo confirm deletion write : yes\n"
                       << std::flush;
+
+            //ask for confirmation to prevent mistakes
             std::string confirmation;
             std::cin >> confirmation;
             if (std::toupper(confirmation[0]) == 'Y')
@@ -156,20 +172,7 @@ namespace
 
         //print all previously added stations of the line
         if (station_id != 1)
-        {
-            std::cout << "List of already existing stations in the line\n\n"
-                      << "line  station  station_name          seconds to next station\n";
-            sql::ResultSet *existing_stations;
-            existing_stations = stmt->executeQuery("SELECT * FROM stations WHERE line_id = " + std::to_string(line_id) + " ORDER BY station_id ASC");
-            while (existing_stations->next())
-            {
-                std::cout << " " << std::setw(3) << std::right << std::setfill('0') << existing_stations->getInt("line_id")
-                          << "      " << std::setw(3) << std::right << std::setfill('0') << existing_stations->getInt("station_id")
-                          << "  " << std::setw(20) << std::left << std::setfill(' ') << existing_stations->getString("station_name")
-                          << "  " << std::setw(4) << std::right << std::setfill('0') << existing_stations->getString("travel_time_to_next_station") << "s\n";
-            }
-            delete existing_stations;
-        }
+            STATIONS::output_stations(stmt, line_id);
 
         std::cout << "\n\nAdding station " << station_id << " of line " << station_id << '\n';
 
@@ -196,7 +199,7 @@ namespace
         std::cin >> temp_min >> temp_sec;
         seconds_to_next_station = temp_min * 60 + temp_sec;
         std::cout << temp_min << ' ' << temp_sec << ' ' << seconds_to_next_station << std::endl;
-        STATIONS::append_station(con, stmt, line_id, station_id, new_station_name.c_str(), seconds_to_station);
+        STATIONS::append_valid_station(con, stmt, line_id, station_id, new_station_name.c_str(), seconds_to_station);
 
         if (seconds_to_next_station > 0)
             new_line_station_adding(con, stmt, line_id, station_id + 1, seconds_to_next_station);
