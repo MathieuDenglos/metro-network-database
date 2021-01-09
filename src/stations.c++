@@ -4,10 +4,10 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
+#include <limits>
 
 namespace STATIONS
 {
-    //general input, output functions
     std::size_t output_stations(sql::Statement *stmt,
                                 int line_id)
     {
@@ -19,7 +19,7 @@ namespace STATIONS
         //if stations are found, print them, otherwise tell the user that the line has no stations
         if (stations_count > 0)
         {
-            std::cout << "List of stations in the line\n\n"
+            std::cout << "List of stations in the line " << line_id << "\n\n"
                       << "line  station  station_name          seconds to next station\n";
             while (existing_stations->next())
             {
@@ -67,30 +67,6 @@ namespace STATIONS
         return (*searched_station)->rowsCount();
     }
 
-    void append_valid_station(sql::Connection *con,
-                              sql::Statement *stmt,
-                              int line_id,
-                              int station_id,
-                              const char *station_name,
-                              int seconds_to_station)
-    {
-        //Append a new station in the stations table, only filling :
-        //line_id, station_id and station_name while setting to NULL the time_to_next_station (which doesn't exist)
-        sql::PreparedStatement *append_station_stmt;
-        append_station_stmt = con->prepareStatement("INSERT INTO stations(line_id, station_id, station_name)"
-                                                    "   VALUES (?, ?, ?)");
-        append_station_stmt->setInt(1, line_id);
-        append_station_stmt->setInt(2, station_id);
-        append_station_stmt->setString(3, station_name);
-        append_station_stmt->execute();
-        delete append_station_stmt;
-
-        //update the previous station (unless it's the first one) with the new seconds to station
-        stmt->execute("UPDATE stations"
-                      "   SET travel_time_to_next_station = " +
-                      std::to_string(seconds_to_station) + "   WHERE line_id = " + std::to_string(line_id) + " AND station_id = " + std::to_string(station_id - 1));
-    }
-
     void remove_valid_station(sql::Statement *stmt,
                               int line_id,
                               int station_id,
@@ -123,7 +99,7 @@ namespace STATIONS
         if (NETWORK::output_lines(stmt) == 0)
             return;
 
-        //ask for the line and
+        //ask for the line and shows all the stations of said line
         sql::ResultSet *searched_line;
         if (NETWORK::ask_line(&searched_line, stmt) == 0)
             std::cout << "\nNo line found with given research, try again later\n"
@@ -132,15 +108,14 @@ namespace STATIONS
         {
             std::cout << "\e[1;1H\e[2J";
             searched_line->next();
-            std::cout << "\n\n\nStations of line " << searched_line->getString("line_name")
-                      << " (" << searched_line->getInt("line_id") << "\n\n"
-                      << std::flush;
             STATIONS::output_stations(stmt, searched_line->getInt("line_id"));
         }
     }
 
     void remove_station(sql::Statement *stmt)
     {
+        std::cout << "\e[1;1H\e[2J";
+
         //first output all the lines and return if none are being displayed
         if (NETWORK::output_lines(stmt) == 0)
             return;
@@ -158,7 +133,7 @@ namespace STATIONS
             {
                 delete searched_line;
                 return;
-            };
+            }
 
             //ask the user to select a station within the line
             sql::ResultSet *searched_station;
@@ -192,6 +167,8 @@ namespace STATIONS
     void add_station(sql::Statement *stmt,
                      sql::Connection *con)
     {
+        std::cout << "\e[1;1H\e[2J";
+
         //first output all the lines and return if none are being displayed
         if (NETWORK::output_lines(stmt) == 0)
             return;
@@ -223,6 +200,7 @@ namespace STATIONS
 
             //Ask for the station name
             std::string new_station_name;
+            std::cout << "\e[1;1H\e[2J";
             std::cout << "Provide a name for this new station (has to be unique within the line)\n"
                       << std::flush;
             sql::ResultSet *same_station_name;

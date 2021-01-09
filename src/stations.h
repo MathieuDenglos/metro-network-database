@@ -12,13 +12,7 @@ namespace STATIONS
                             sql::ResultSet **searched_station,
                             int line_id);
 
-    //station modifications (add, alter, delete)
-    void append_valid_station(sql::Connection *con,
-                              sql::Statement *stmt,
-                              int line_id,
-                              int station_id,
-                              const char *station_name,
-                              int seconds_to_station);
+    //station modifications (add, update, delete)
     void insert_valid_station(sql::Connection *con,
                               sql::Statement *stmt,
                               int line_id,

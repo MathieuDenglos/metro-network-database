@@ -3,18 +3,20 @@
 #include "stations.h"
 
 #include <iostream>
+#include <limits>
+#include <limits>
 
 namespace GUI
 {
     bool execute_querry(sql::Connection *con,
                         sql::Statement *stmt)
     {
+        std::cout << "\e[1;1H\e[2J";
         int choice;
-
         std::cout << "que voules-vous faire ?\n\n"
-                  << "1) modify network\n"
-                  << "2) modify rolling_stocks\n"
-                  << "3) modify schedule\n"
+                  << "1) Network/stations\n"
+                  << "2) rolling_stocks\n"
+                  << "3) schedule\n"
                   << "0) exit\n"
                   << std::flush;
         std::cin >> choice;
@@ -23,32 +25,35 @@ namespace GUI
         {
         case 1:
             GUI::modify_network(con, stmt);
-            return true;
+            break;
         case 2:
             std::cout << "to implement" << std::endl;
-            return true;
+            break;
         case 3:
             std::cout << "to implement" << std::endl;
-            return true;
-        case 0:
-            return false;
+            break;
         default:
-            return true;
+            return false;
         }
+        std::cout << "\nPress enter to continue"
+                  << std::flush;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        char c = getchar();
+        return true;
     }
 
     void modify_network(sql::Connection *con,
                         sql::Statement *stmt)
     {
         int choice;
-
+        char c;
         std::cout << "quelles modification apporter au network ?\n\n"
                   << "1) Add a new line\n"
-                  << "2) See lines in the network\n"
+                  << "2) Show lines in the network\n"
                   << "3) Remove a line\n"
-                  << "4) Add a station station\n"
-                  << "5) See stations of a line\n"
-                  << "6) Remove a station\n"
+                  << "4) Add a station to an existing line\n"
+                  << "5) Show stations of a line\n"
+                  << "6) Remove a station from an existing line\n"
                   << "0) cancel\n"
                   << std::flush;
         std::cin >> choice;

@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <string>
 #include <exception>
+#include <limits>
 
 namespace NETWORK
 {
@@ -122,6 +123,8 @@ namespace NETWORK
     void remove_line(sql::Connection *con,
                      sql::Statement *stmt)
     {
+        std::cout << "\e[1;1H\e[2J";
+
         //prints all the lines and return if there are none
         if (NETWORK::output_lines(stmt) == 0)
             return;
@@ -198,8 +201,8 @@ namespace
         std::cout << "indicates the time to the next station minutes (enter) seconds (0 (enter) 0) if last station" << std::endl;
         std::cin >> temp_min >> temp_sec;
         seconds_to_next_station = temp_min * 60 + temp_sec;
-        std::cout << temp_min << ' ' << temp_sec << ' ' << seconds_to_next_station << std::endl;
-        STATIONS::append_valid_station(con, stmt, line_id, station_id, new_station_name.c_str(), seconds_to_station);
+
+        STATIONS::insert_valid_station(con, stmt, line_id, station_id, new_station_name.c_str(), seconds_to_station, 0);
 
         if (seconds_to_next_station > 0)
             new_line_station_adding(con, stmt, line_id, station_id + 1, seconds_to_next_station);
