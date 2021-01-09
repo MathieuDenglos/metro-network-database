@@ -65,7 +65,7 @@ namespace GUI
             NETWORK::remove_line(con, stmt);
             break;
         case 4:
-            std::cout << "to implement" << std::endl;
+            STATIONS::add_station(stmt, con);
             break;
         case 5:
             STATIONS::show_line_stations(stmt);

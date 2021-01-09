@@ -19,6 +19,13 @@ namespace STATIONS
                               int station_id,
                               const char *station_name,
                               int seconds_to_station);
+    void insert_valid_station(sql::Connection *con,
+                              sql::Statement *stmt,
+                              int line_id,
+                              int station_id,
+                              const char *station_name,
+                              int seconds_to_station,
+                              int seconds_to_next_station);
     void remove_valid_station(sql::Statement *stmt,
                               int line_id,
                               int station_id,
@@ -28,6 +35,8 @@ namespace STATIONS
 
     //connector functions
     void show_line_stations(sql::Statement *stmt);
+    void add_station(sql::Statement *stmt,
+                     sql::Connection *con);
     void remove_station(sql::Statement *stmt);
 
 } // namespace STATIONS

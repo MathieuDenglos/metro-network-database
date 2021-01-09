@@ -188,4 +188,130 @@ namespace STATIONS
         }
         delete searched_line;
     }
+
+    void add_station(sql::Statement *stmt,
+                     sql::Connection *con)
+    {
+        //first output all the lines and return if none are being displayed
+        if (NETWORK::output_lines(stmt) == 0)
+            return;
+
+        //ask the user to select a line
+        sql::ResultSet *searched_line;
+        if (NETWORK::ask_line(&searched_line, stmt) == 0)
+            std::cout << "\nNo line found with given research, try again later\n"
+                      << std::flush;
+        else
+        {
+            searched_line->next();
+            //if the search is successful, move on and outputs all the stations of the line
+            std::size_t stations_count = STATIONS::output_stations(stmt, searched_line->getInt("line_id"));
+
+            //grabs the station_id
+            int new_station_id;
+            std::cout << "indicate the id of the station after which you want to insert the station\n"
+                      << "(0 = begining ; " << stations_count << " = end)\n\n"
+                      << std::flush;
+            std::cin >> new_station_id;
+
+            //normalize the given value, so the station_id always are incrementing
+            const bool is_begining = new_station_id <= 0;
+            const bool is_end = new_station_id >= stations_count;
+            new_station_id = 1 * is_begining +
+                             (stations_count + 1) * (is_end && !is_begining) +
+                             (new_station_id + 1) * (!is_begining && !is_end);
+
+            //Ask for the station name
+            std::string new_station_name;
+            std::cout << "Provide a name for this new station (has to be unique within the line)\n"
+                      << std::flush;
+            sql::ResultSet *same_station_name;
+            do
+            {
+                std::cin >> new_station_name;
+                if (new_station_name.size() > 20)
+                    new_station_name.erase(new_station_name.begin() + 19, new_station_name.end());
+                same_station_name = stmt->executeQuery("SELECT COUNT(line_id) FROM stations WHERE line_id = " + std::to_string(searched_line->getInt("line_id")) + " AND station_name LIKE \'" + new_station_name + "\';");
+                same_station_name->next();
+                if (same_station_name->getInt(1) != 0)
+                    std::cout << "This line already has a station with the name : " << new_station_name << std::endl;
+            } while (same_station_name->getInt(1) != 0);
+            delete same_station_name;
+
+            //Now need to change some travel time to stations depending on where the station is at
+            unsigned int seconds_to_station = 0, seconds_to_next_station = 0, temp_min, temp_sec;
+
+            //if the station is not at the begining, a time to station must be given to update the old one
+            if (!is_begining)
+            {
+                std::cout << "Insert the new time from the previous station to this station\nminutes (enter) seconds"
+                          << std::flush;
+                do
+                {
+                    std::cin >> temp_min >> temp_sec;
+                    if (temp_min == 0 && temp_sec == 0)
+                        std::cout << "travel time between stations cannot be null, teleportation doesn't exist yet\n"
+                                  << std::flush;
+                } while (temp_min == 0 && temp_sec == 0);
+                seconds_to_station = temp_min * 60 + temp_sec;
+            }
+
+            //if the station is not at the end, a time to the next station must be given to update the old one
+            if (!is_end)
+            {
+                std::cout << "Insert the time to the next station\nminutes (enter) seconds"
+                          << std::flush;
+                do
+                {
+                    std::cin >> temp_min >> temp_sec;
+                    if (temp_min == 0 && temp_sec == 0)
+                        std::cout << "travel time between stations cannot be null, teleportation doesn't exist yet\n"
+                                  << std::flush;
+                } while (temp_min == 0 && temp_sec == 0);
+                seconds_to_next_station = temp_min * 60 + temp_sec;
+            }
+
+            //Modify the append valid station to make it an insert valid station. (send the time_to and time_to_next and execute more querries depending on where the station needs to be inserted)
+            STATIONS::insert_valid_station(con, stmt, searched_line->getInt("line_id"), new_station_id, new_station_name.c_str(), seconds_to_station, seconds_to_next_station);
+        }
+        delete searched_line;
+    }
+
+    void insert_valid_station(sql::Connection *con,
+                              sql::Statement *stmt,
+                              int line_id,
+                              int station_id,
+                              const char *station_name,
+                              int seconds_to_station,
+                              int seconds_to_next_station)
+    {
+        if (seconds_to_next_station > 0)
+            stmt->execute("UPDATE stations"
+                          "   SET station_id = station_id + 1"
+                          "   WHERE line_id = " +
+                          std::to_string(line_id) + " AND station_id >= " + std::to_string(station_id) + " ORDER BY station_id DESC;");
+
+        //Append a new station in the stations table, only filling :
+        //line_id, station_id and station_name while setting to NULL the time_to_next_station (which doesn't exist)
+        sql::PreparedStatement *append_station_stmt;
+        if (seconds_to_next_station > 0)
+            append_station_stmt = con->prepareStatement("INSERT INTO stations(line_id, station_id, station_name, travel_time_to_next_station)"
+                                                        "   VALUES (?, ?, ?, ?)");
+        else
+            append_station_stmt = con->prepareStatement("INSERT INTO stations(line_id, station_id, station_name)"
+                                                        "   VALUES (?, ?, ?)");
+        append_station_stmt->setInt(1, line_id);
+        append_station_stmt->setInt(2, station_id);
+        append_station_stmt->setString(3, station_name);
+        if (seconds_to_next_station > 0)
+            append_station_stmt->setInt(4, seconds_to_next_station);
+        append_station_stmt->execute();
+        delete append_station_stmt;
+
+        //update the previous station (unless it's the first one) with the new seconds to station
+        if (seconds_to_station > 0)
+            stmt->execute("UPDATE stations"
+                          "   SET travel_time_to_next_station = " +
+                          std::to_string(seconds_to_station) + "   WHERE line_id = " + std::to_string(line_id) + " AND station_id = " + std::to_string(station_id - 1));
+    }
 } // namespace STATIONS
