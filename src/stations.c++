@@ -13,11 +13,15 @@ namespace STATIONS
     {
         //first collect all the stations in given line
         sql::ResultSet *existing_stations;
-        existing_stations = stmt->executeQuery("SELECT * FROM stations WHERE line_id = " + std::to_string(line_id) + " ORDER BY station_id ASC");
+        existing_stations = stmt->executeQuery("SELECT * FROM stations WHERE line_id = " + std::to_string(line_id) + " ORDER BY station_id ASC"); //TODO : prepared statement
         std::size_t stations_count = existing_stations->rowsCount();
 
-        //if stations are found, print them, otherwise tell the user that the line has no stations
-        if (stations_count > 0)
+        //if none exists, tell the user
+        if (stations_count == 0)
+                        std::cout << "line " << line_id << " has no stations yet\n"
+                      << std::flush;
+        //else output existing lines
+        else
         {
             std::cout << "List of stations in the line " << line_id << "\n\n"
                       << "line  station  station_name          seconds to next station\n";
@@ -30,10 +34,8 @@ namespace STATIONS
             }
             std::cout << std::flush;
         }
-        else
-            std::cout << "line " << line_id << " has no stations yet\n"
-                      << std::flush;
 
+        //delete the Result query and return
         delete existing_stations;
         return stations_count;
     }
@@ -52,12 +54,12 @@ namespace STATIONS
         {
             //convert the reply to an int and search by line_id if std::stoi() doesn't throw
             int searched_id = std::stoi(reply);
-            *searched_station = stmt->executeQuery("SELECT * FROM stations WHERE line_id = " + std::to_string(line_id) + " AND station_id = " + reply + " ;");
+            *searched_station = stmt->executeQuery("SELECT * FROM stations WHERE line_id = " + std::to_string(line_id) + " AND station_id = " + reply + " ;"); //TODO : prepared statement
         }
         catch (const std::invalid_argument &e)
         {
             //if the function throw, it means that the user did a research by line_name
-            *searched_station = stmt->executeQuery("SELECT * FROM stations WHERE line_id = " + std::to_string(line_id) + " AND station_name = \'" + reply + "\' ;");
+            *searched_station = stmt->executeQuery("SELECT * FROM stations WHERE line_id = " + std::to_string(line_id) + " AND station_name = \'" + reply + "\' ;"); //TODO : prepared statement
         }
         catch (const std::out_of_range &e)
         {
@@ -75,7 +77,7 @@ namespace STATIONS
                               int seconds_from_last_to_next)
     {
         //Remove the station from the stations table
-        stmt->execute("DELETE FROM stations where line_id = " + std::to_string(line_id) + " AND station_id = " + std::to_string(station_id) + " ;");
+        stmt->execute("DELETE FROM stations where line_id = " + std::to_string(line_id) + " AND station_id = " + std::to_string(station_id) + " ;"); //TODO : prepared statement
 
         //if it isn't the last station, decreases all the station_id above by one to still have an incrementing list.
         if (!is_last_station)
@@ -86,11 +88,11 @@ namespace STATIONS
 
         //if it's the last station that got removed and the line still have stations, set the previous station time to next station to NULL
         if (is_last_station && !is_first_station)
-            stmt->execute("UPDATE stations SET travel_time_to_next_station = NULL WHERE line_id = " + std::to_string(line_id) + " AND station_id = " + std::to_string(station_id - 1) + ";");
+            stmt->execute("UPDATE stations SET travel_time_to_next_station = NULL WHERE line_id = " + std::to_string(line_id) + " AND station_id = " + std::to_string(station_id - 1) + ";"); // TODO : prepared statement
 
         //otherwise, set the time to the next station to seconds_from_last_to_next
         if (!is_first_station && !is_last_station)
-            stmt->execute("UPDATE stations SET travel_time_to_next_station = " + std::to_string(seconds_from_last_to_next) + " WHERE line_id = " + std::to_string(line_id) + " AND station_id = " + std::to_string(station_id - 1) + ";");
+            stmt->execute("UPDATE stations SET travel_time_to_next_station = " + std::to_string(seconds_from_last_to_next) + " WHERE line_id = " + std::to_string(line_id) + " AND station_id = " + std::to_string(station_id - 1) + ";"); //TODO : prepared statement
     }
 
     void show_line_stations(sql::Connection *con,
@@ -114,7 +116,7 @@ namespace STATIONS
     }
 
     void remove_station(sql::Connection* con,
-    sql::Statement *stmt)
+                        sql::Statement *stmt)
     {
         std::cout << "\e[1;1H\e[2J";
 
@@ -147,7 +149,7 @@ namespace STATIONS
                 searched_station->next();
                 //Unless we're removing the first or last station; ask for the time from previous station to next station
                 int time_from_last_to_next = 0, temp_min, temp_sec;
-                const bool is_last_station = (stmt->executeQuery("SELECT station_id FROM stations WHERE line_id = " + std::to_string(searched_station->getInt("line_id")) + " AND station_id > " + std::to_string(searched_station->getInt("station_id")) + " ;")->rowsCount() == 0);
+                const bool is_last_station = (stmt->executeQuery("SELECT station_id FROM stations WHERE line_id = " + std::to_string(searched_station->getInt("line_id")) + " AND station_id > " + std::to_string(searched_station->getInt("station_id")) + " ;")->rowsCount() == 0); //TODO : prepared statement
                 const bool is_first_station = searched_station->getInt("station_id") == 1;
 
                 //If this is neither the first station or last station, ask the new time from station_id -1 to station_id
@@ -211,7 +213,7 @@ namespace STATIONS
                 std::cin >> new_station_name;
                 if (new_station_name.size() > 20)
                     new_station_name.erase(new_station_name.begin() + 19, new_station_name.end());
-                same_station_name = stmt->executeQuery("SELECT COUNT(line_id) FROM stations WHERE line_id = " + std::to_string(searched_line->getInt("line_id")) + " AND station_name LIKE \'" + new_station_name + "\';");
+                same_station_name = stmt->executeQuery("SELECT COUNT(line_id) FROM stations WHERE line_id = " + std::to_string(searched_line->getInt("line_id")) + " AND station_name LIKE \'" + new_station_name + "\';"); //TODO : prepared statement
                 same_station_name->next();
                 if (same_station_name->getInt(1) != 0)
                     std::cout << "This line already has a station with the name : " << new_station_name << std::endl;
@@ -269,7 +271,7 @@ namespace STATIONS
             stmt->execute("UPDATE stations"
                           "   SET station_id = station_id + 1"
                           "   WHERE line_id = " +
-                          std::to_string(line_id) + " AND station_id >= " + std::to_string(station_id) + " ORDER BY station_id DESC;");
+                          std::to_string(line_id) + " AND station_id >= " + std::to_string(station_id) + " ORDER BY station_id DESC;"); //TODO : prepared statement
 
         //Append a new station in the stations table, only filling :
         //line_id, station_id and station_name while setting to NULL the time_to_next_station (which doesn't exist)
@@ -292,6 +294,6 @@ namespace STATIONS
         if (seconds_to_station > 0)
             stmt->execute("UPDATE stations"
                           "   SET travel_time_to_next_station = " +
-                          std::to_string(seconds_to_station) + "   WHERE line_id = " + std::to_string(line_id) + " AND station_id = " + std::to_string(station_id - 1));
+                          std::to_string(seconds_to_station) + "   WHERE line_id = " + std::to_string(line_id) + " AND station_id = " + std::to_string(station_id - 1)); //TODO : prepared statement
     }
 } // namespace STATIONS

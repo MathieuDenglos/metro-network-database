@@ -77,7 +77,7 @@ namespace GUI
             STATIONS::show_line_stations(stmt);
             break;
         case 6:
-            STATIONS::remove_station(stmt);
+            STATIONS::remove_station(con, stmt);
             break;
         }
     }
