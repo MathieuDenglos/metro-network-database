@@ -3,6 +3,19 @@
 
 #include "constants_includes.h"
 
+namespace NPS //Network Prepared Statement
+{
+    static const char *select_by_line_id = "SELECT * FROM network "
+                                           "   WHERE line_id = ? ;";
+    static const char *select_by_line_name = "SELECT * FROM network "
+                                             "   WHERE line_name = ? ;";
+    static const char *insert_line = "INSERT INTO network(line_id, line_name)"
+                                     "   VALUES (?, ?)";
+    static const char *delete_line = "DELETE FROM network "
+                                     "WHERE line_id = ? ;";
+
+} // namespace NPS
+
 namespace
 {
     /**
@@ -17,10 +30,10 @@ namespace
      * @param seconds_to_station time in seconds to the station that's about to be added (0 for the first call)
      */
     void add_stations_in_new_line(sql::Connection *con,
-                                 sql::Statement *stmt,
-                                 int line_id,
-                                 int station_id = 1,
-                                 int seconds_to_station = 0);
+                                  sql::Statement *stmt,
+                                  int line_id,
+                                  int station_id = 1,
+                                  int seconds_to_station = 0);
 } // namespace
 
 namespace NETWORK

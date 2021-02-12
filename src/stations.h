@@ -3,6 +3,13 @@
 
 #include "constants_includes.h"
 
+namespace SPS //Stations Prepared Statements
+{
+    static const char *search_by_name_and_id = "SELECT * FROM stations "
+                                               "WHERE line_id = ? "
+                                               "AND station_name LIKE ?;";
+}
+
 namespace STATIONS
 {
     /**
@@ -46,7 +53,7 @@ namespace STATIONS
                               const char *station_name,
                               int seconds_to_station,
                               int seconds_to_next_station);
-                            
+
     /**
      * @brief remove a valid existing station from a line
      * STATION MUST BE VALID TO PREVENT UNEXPECTED TERMINATION

@@ -12,13 +12,14 @@ namespace STATIONS
                                 int line_id)
     {
         //first collect all the stations in given line
+        std::cout << "\e[1;1H\e[2J";
         sql::ResultSet *existing_stations;
         existing_stations = stmt->executeQuery("SELECT * FROM stations WHERE line_id = " + std::to_string(line_id) + " ORDER BY station_id ASC"); //TODO : prepared statement
         std::size_t stations_count = existing_stations->rowsCount();
 
         //if none exists, tell the user
         if (stations_count == 0)
-                        std::cout << "line " << line_id << " has no stations yet\n"
+            std::cout << "line " << line_id << " has no stations yet\n"
                       << std::flush;
         //else output existing lines
         else
@@ -109,17 +110,14 @@ namespace STATIONS
                       << std::flush;
         else
         {
-            std::cout << "\e[1;1H\e[2J";
             searched_line->next();
             STATIONS::output_stations(stmt, searched_line->getInt("line_id"));
         }
     }
 
-    void remove_station(sql::Connection* con,
+    void remove_station(sql::Connection *con,
                         sql::Statement *stmt)
     {
-        std::cout << "\e[1;1H\e[2J";
-
         //first output all the lines and return if none are being displayed
         if (NETWORK::output_lines(stmt) == 0)
             return;
@@ -171,8 +169,6 @@ namespace STATIONS
     void add_station(sql::Connection *con,
                      sql::Statement *stmt)
     {
-        std::cout << "\e[1;1H\e[2J";
-
         //first output all the lines and return if none are being displayed
         if (NETWORK::output_lines(stmt) == 0)
             return;
