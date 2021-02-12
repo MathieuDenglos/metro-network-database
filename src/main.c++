@@ -14,7 +14,7 @@ int main()
     {
         //Initialisation (connection et creation tables)
         INI::connection(&driver, &con, &stmt);
-        INI::verify_tables_existance(&con, stmt);
+        INI::verify_tables_existence(&con, stmt);
 
         //querries executions
         while (GUI::execute_query(con, stmt))

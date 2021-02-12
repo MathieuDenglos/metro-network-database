@@ -14,7 +14,7 @@ namespace INI
         *stmt = (*con)->createStatement();
     }
 
-    void verify_tables_existance(sql::Connection **con,
+    void verify_tables_existence(sql::Connection **con,
                                  sql::Statement *stmt)
     {
         //first we create the database if it doesn't exists
