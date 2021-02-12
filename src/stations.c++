@@ -72,7 +72,7 @@ namespace STATIONS
                               int station_id,
                               bool is_last_station,
                               bool is_first_station,
-                              int secons_from_last_to_next)
+                              int seconds_from_last_to_next)
     {
         //Remove the station from the stations table
         stmt->execute("DELETE FROM stations where line_id = " + std::to_string(line_id) + " AND station_id = " + std::to_string(station_id) + " ;");
@@ -88,12 +88,13 @@ namespace STATIONS
         if (is_last_station && !is_first_station)
             stmt->execute("UPDATE stations SET travel_time_to_next_station = NULL WHERE line_id = " + std::to_string(line_id) + " AND station_id = " + std::to_string(station_id - 1) + ";");
 
-        //otherwise, set the time to the next station to secons_from_last_to_next
+        //otherwise, set the time to the next station to seconds_from_last_to_next
         if (!is_first_station && !is_last_station)
-            stmt->execute("UPDATE stations SET travel_time_to_next_station = " + std::to_string(secons_from_last_to_next) + " WHERE line_id = " + std::to_string(line_id) + " AND station_id = " + std::to_string(station_id - 1) + ";");
+            stmt->execute("UPDATE stations SET travel_time_to_next_station = " + std::to_string(seconds_from_last_to_next) + " WHERE line_id = " + std::to_string(line_id) + " AND station_id = " + std::to_string(station_id - 1) + ";");
     }
 
-    void show_line_stations(sql::Statement *stmt)
+    void show_line_stations(sql::Connection *con,
+                            sql::Statement *stmt)
     {
         //outputs all the line and returns if none exists
         if (NETWORK::output_lines(stmt) == 0)
@@ -101,7 +102,7 @@ namespace STATIONS
 
         //ask for the line and shows all the stations of said line
         sql::ResultSet *searched_line;
-        if (NETWORK::ask_line(&searched_line, stmt) == 0)
+        if (NETWORK::ask_line(con, stmt, &searched_line) == 0)
             std::cout << "\nNo line found with given research, try again later\n"
                       << std::flush;
         else
@@ -112,7 +113,8 @@ namespace STATIONS
         }
     }
 
-    void remove_station(sql::Statement *stmt)
+    void remove_station(sql::Connection* con,
+    sql::Statement *stmt)
     {
         std::cout << "\e[1;1H\e[2J";
 
@@ -122,7 +124,7 @@ namespace STATIONS
 
         //ask the user to select a line
         sql::ResultSet *searched_line;
-        if (NETWORK::ask_line(&searched_line, stmt) == 0)
+        if (NETWORK::ask_line(con, stmt, &searched_line) == 0)
             std::cout << "\nNo line found with given research, try again later\n"
                       << std::flush;
         else
@@ -164,8 +166,8 @@ namespace STATIONS
         delete searched_line;
     }
 
-    void add_station(sql::Statement *stmt,
-                     sql::Connection *con)
+    void add_station(sql::Connection *con,
+                     sql::Statement *stmt)
     {
         std::cout << "\e[1;1H\e[2J";
 
@@ -175,7 +177,7 @@ namespace STATIONS
 
         //ask the user to select a line
         sql::ResultSet *searched_line;
-        if (NETWORK::ask_line(&searched_line, stmt) == 0)
+        if (NETWORK::ask_line(con, stmt, &searched_line) == 0)
             std::cout << "\nNo line found with given research, try again later\n"
                       << std::flush;
         else

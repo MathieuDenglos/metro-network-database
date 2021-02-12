@@ -17,7 +17,7 @@ int main()
         INI::verify_tables_existance(&con, stmt);
 
         //querries executions
-        while (GUI::execute_querry(con, stmt))
+        while (GUI::execute_query(con, stmt))
             ;
 
         //to destroy the tables (mainly dev purposes)

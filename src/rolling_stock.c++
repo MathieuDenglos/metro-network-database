@@ -69,7 +69,7 @@ namespace RS
         {
             (*search_train)->next();
             int material_id;
-            std::cout << "multiple trains selected in a unique querry, here are the different trains selected\n"
+            std::cout << "multiple trains selected in a unique query, here are the different trains selected\n"
                       << std::flush;
 
             RS::output_rolling_stocks(stmt,

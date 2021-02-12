@@ -5,7 +5,7 @@
 
 namespace GUI
 {
-    bool execute_querry(sql::Connection *con,
+    bool execute_query(sql::Connection *con,
                         sql::Statement *stmt);
 
     void modify_network(sql::Connection *con,

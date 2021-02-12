@@ -25,12 +25,12 @@ namespace STATIONS
                               int station_id,
                               bool is_last_station,
                               bool is_first_station,
-                              int secons_from_last_to_next);
+                              int seconds_from_last_to_next);
 
     //connector functions
     void show_line_stations(sql::Statement *stmt);
-    void add_station(sql::Statement *stmt,
-                     sql::Connection *con);
+    void add_station(sql::Connection *con,
+                     sql::Statement *stmt);
     void remove_station(sql::Statement *stmt);
 
 } // namespace STATIONS

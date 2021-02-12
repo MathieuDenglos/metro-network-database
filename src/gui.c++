@@ -9,7 +9,7 @@
 
 namespace GUI
 {
-    bool execute_querry(sql::Connection *con,
+    bool execute_query(sql::Connection *con,
                         sql::Statement *stmt)
     {
         std::cout << "\e[1;1H\e[2J";
@@ -71,7 +71,7 @@ namespace GUI
             NETWORK::remove_line(con, stmt);
             break;
         case 4:
-            STATIONS::add_station(stmt, con);
+            STATIONS::add_station(con, stmt);
             break;
         case 5:
             STATIONS::show_line_stations(stmt);
