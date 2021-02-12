@@ -48,7 +48,7 @@ namespace GUI
     {
         int choice;
         char c;
-        std::cout << "what changed to do on the network ?\n\n"
+        std::cout << "what changes to do in the network ?\n\n"
                   << "1) Add a new line\n"
                   << "2) Show lines in the network\n"
                   << "3) Remove a line\n"
@@ -74,7 +74,7 @@ namespace GUI
             STATIONS::add_station(con, stmt);
             break;
         case 5:
-            STATIONS::show_line_stations(stmt);
+            STATIONS::show_line_stations(con, stmt);
             break;
         case 6:
             STATIONS::remove_station(con, stmt);

@@ -23,7 +23,7 @@ namespace NETWORK
         //else output existing lines
         else
         {
-            std::cout << "The network already have " << lines_count << " lines\n\n"
+            std::cout << "The network already has " << lines_count << " lines\n\n"
                       << "number  line_name\n";
 
             while (existing_lines->next())

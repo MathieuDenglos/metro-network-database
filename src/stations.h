@@ -70,7 +70,8 @@ namespace STATIONS
      * 
      * @param stmt Used to communicate with the database
      */
-    void show_line_stations(sql::Statement *stmt);
+    void show_line_stations(sql::Connection *con,
+                            sql::Statement *stmt);
 
     /**
      * @brief Complete process for the user to add a new station in a line

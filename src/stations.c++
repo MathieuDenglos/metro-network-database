@@ -24,7 +24,7 @@ namespace STATIONS
         else
         {
             std::cout << "List of stations in the line " << line_id << "\n\n"
-                      << "line  station  station_name          seconds to next station\n";
+                      << "line  station  station_name          travel time to the next station\n";
             while (existing_stations->next())
             {
                 std::cout << " " << std::setw(3) << std::right << std::setfill('0') << existing_stations->getInt("line_id")
