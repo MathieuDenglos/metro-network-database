@@ -5,12 +5,18 @@
 
 namespace NPS //Network Prepared Statement
 {
+    static const char *select_all_lines = "SELECT * FROM network "
+                                          "ORDER BY line_id ASC";
+
     static const char *select_by_line_id = "SELECT * FROM network "
-                                           "   WHERE line_id = ? ;";
+                                           "WHERE line_id = ? ;";
+
     static const char *select_by_line_name = "SELECT * FROM network "
-                                             "   WHERE line_name = ? ;";
+                                             "WHERE line_name = ? ;";
+
     static const char *insert_line = "INSERT INTO network(line_id, line_name)"
-                                     "   VALUES (?, ?)";
+                                     "VALUES (?, ?)";
+
     static const char *delete_line = "DELETE FROM network "
                                      "WHERE line_id = ? ;";
 

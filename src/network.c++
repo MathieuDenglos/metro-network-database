@@ -14,8 +14,7 @@ namespace NETWORK
         //grab the list of lines in the network
         std::cout << "\e[1;1H\e[2J";
         sql::ResultSet *existing_lines;
-        existing_lines = stmt->executeQuery("SELECT line_id, line_name FROM network "
-                                            "ORDER BY line_id ASC");
+        existing_lines = stmt->executeQuery(NPS::select_all_lines);
         std::size_t lines_count = existing_lines->rowsCount();
 
         //if none exists, tell the user
@@ -149,7 +148,6 @@ namespace NETWORK
         {
             //print all the stations within the line
             searched_line->next();
-            std::cout << "\e[1;1H\e[2J";
             int station_in_line = STATIONS::output_stations(stmt, searched_line->getInt("line_id"));
             std::cout << "\nBy deleting the line " << searched_line->getString("line_name") << " (" << searched_line->getInt("line_id")
                       << "), you will also remove : " << station_in_line
