@@ -148,7 +148,7 @@ namespace NETWORK
         {
             //print all the stations within the line
             searched_line->next();
-            int station_in_line = STATIONS::output_stations(stmt, searched_line->getInt("line_id"));
+            int station_in_line = STATIONS::output_stations(con, searched_line->getInt("line_id"));
             std::cout << "\nBy deleting the line " << searched_line->getString("line_name") << " (" << searched_line->getInt("line_id")
                       << "), you will also remove : " << station_in_line
                       << " stations.\nTo confirm deletion write : yes\n"
@@ -186,7 +186,7 @@ namespace
     {
         //print all previously added stations of the line
         if (station_id != 1)
-            STATIONS::output_stations(stmt, line_id);
+            STATIONS::output_stations(con, line_id);
 
         std::cout << "\n\nAdding station " << station_id << " of line " << station_id << '\n';
 
@@ -194,8 +194,8 @@ namespace
         std::cout << "Provide a name for this new station (has to be unique within the line)\n"
                   << std::flush;
         std::string new_station_name;
-        sql::PreparedStatement *search_by_name_and_id = con->prepareStatement(SPS::search_by_name_and_id);
-        search_by_name_and_id->setInt(1, line_id);
+        sql::PreparedStatement *search_by_station_name_and_line_id = con->prepareStatement(SPS::search_by_station_name_and_line_id);
+        search_by_station_name_and_line_id->setInt(1, line_id);
         sql::ResultSet *same_station_name;
         do
         {
@@ -205,8 +205,8 @@ namespace
                 new_station_name.erase(new_station_name.begin() + 19, new_station_name.end());
 
             //verify if another station doesn't have the same name (all stations must have unique name within the line)
-            search_by_name_and_id->setString(2, new_station_name);
-            same_station_name = search_by_name_and_id->executeQuery();
+            search_by_station_name_and_line_id->setString(2, new_station_name);
+            same_station_name = search_by_station_name_and_line_id->executeQuery();
             if (same_station_name->rowsCount() != 0)
                 std::cout << "This line already has a station with the name : " << new_station_name << std::endl;
         } while (same_station_name->rowsCount() != 0);

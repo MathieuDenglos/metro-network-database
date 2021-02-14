@@ -5,10 +5,40 @@
 
 namespace SPS //Stations Prepared Statements
 {
-    static const char *search_by_name_and_id = "SELECT * FROM stations "
-                                               "WHERE line_id = ? "
-                                               "AND station_name LIKE ?;";
-}
+    static const char *search_by_station_name_and_line_id = "SELECT * FROM stations "
+                                                            "WHERE line_id = ? "
+                                                            "AND station_name LIKE ?;";
+
+    static const char *search_by_station_id_and_line_id = "SELECT * FROM stations "
+                                                          "WHERE line_id = ? "
+                                                          "AND station_id = ?;";
+
+    static const char *search_by_line_id = "SELECT * FROM stations "
+                                           "WHERE line_id = ? "
+                                           "ORDER BY station_id ASC";
+
+    static const char *delete_station = "DELETE FROM stations "
+                                        "WHERE line_id = ? "
+                                        "AND station_id = ? ;";
+
+    static const char *range_station_id_decrease = "UPDATE stations SET station_id = station_id - 1 "
+                                                   "WHERE line_id = ? "
+                                                   "AND station_id >= ? "
+                                                   "ORDER BY station_id ASC;";
+
+    static const char *range_station_id_increase = "UPDATE stations SET station_id = station_id + 1 "
+                                                   "WHERE line_id = ? "
+                                                   "AND station_id >= ? "
+                                                   "ORDER BY station_id DESC;";
+
+    static const char *update_travel_time = "UPDATE stations SET travel_time_to_next_station = ? "
+                                            "WHERE line_id = ? "
+                                            "AND station_id = ? ;";
+
+    static const char *insert_station = "INSERT INTO stations(line_id, station_id, station_name, travel_time_to_next_station) "
+                                        "VALUES (?, ?, ?, ?)";
+
+} // namespace SPS
 
 namespace STATIONS
 {
@@ -19,7 +49,7 @@ namespace STATIONS
      * @param line_id id of the line
      * @return amount of stations in the given line 
      */
-    std::size_t output_stations(sql::Statement *stmt,
+    std::size_t output_stations(sql::Connection *con,
                                 int line_id);
 
     /**
@@ -30,7 +60,8 @@ namespace STATIONS
      * @param line_id id of the line to search a station in
      * @return the amount of stations in given line with entered station name or id (normally 0 or 1)
      */
-    std::size_t ask_station(sql::Statement *stmt,
+    std::size_t ask_station(sql::Connection *con,
+                            sql::Statement *stmt,
                             sql::ResultSet **searched_station,
                             int line_id);
 
@@ -65,7 +96,7 @@ namespace STATIONS
      * @param is_first_station whether the station to remove is the first of the list
      * @param seconds_from_last_to_next time in seconds to from previous station to station afterward (only if the station is neither the first nor last one)
      */
-    void remove_valid_station(sql::Statement *stmt,
+    void remove_valid_station(sql::Connection *con, sql::Statement *stmt,
                               int line_id,
                               int station_id,
                               bool is_last_station,
