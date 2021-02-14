@@ -5,39 +5,86 @@
 
 namespace SPS //Stations Prepared Statements
 {
+    /**
+     * @param line_id id of the line of searched station
+     * @param station_name name of the searched station
+     * @return all the stations in the network with the given line id and station name
+     */
     static const char *search_by_station_name_and_line_id = "SELECT * FROM stations "
                                                             "WHERE line_id = ? "
                                                             "AND station_name LIKE ?;";
 
+    /**
+     * @param line_id id of the line of searched station
+     * @param station_id id of the searched station
+     * @return all the stations in the network with the given line id and station id
+     */
     static const char *search_by_station_id_and_line_id = "SELECT * FROM stations "
                                                           "WHERE line_id = ? "
                                                           "AND station_id = ?;";
 
+    /**
+     * @param line_id id of the line of searched station
+     * @return all the stations in the line of the given line id 
+     */
     static const char *search_by_line_id = "SELECT * FROM stations "
                                            "WHERE line_id = ? "
                                            "ORDER BY station_id ASC";
 
+    /**
+     * @brief Insert a new line in the network
+     * 
+     * @param line_id id of the line to insert a station in
+     * @param line_id id of the new station (must be unique within a line)
+     * @param line_name name of the new line (must be unique within a line)
+     * @param travel_time_to_next_station time (in seconds) for a train to go from this station to the next one (NULL if last)
+     */
+    static const char *insert_station = "INSERT INTO stations(line_id, station_id, station_name, travel_time_to_next_station) "
+                                        "VALUES (?, ?, ?, ?)";
+
+    /**
+     * @brief Delete a station from a line
+     * 
+     * @param line_id id of the line where the station to delete is
+     * @param station_id id of the station to delete
+     */
     static const char *delete_station = "DELETE FROM stations "
                                         "WHERE line_id = ? "
                                         "AND station_id = ? ;";
 
+    /**
+     * @brief for a given range of station, decrease the station_id of one.
+     * Generally used after deleting a station, to prevent a gap in a line's stations id
+     * 
+     * @param line_id id of the line to do the action in
+     * @param station_id all stations with an id greater or equal to the given one will have their station id decreased by one
+     */
     static const char *range_station_id_decrease = "UPDATE stations SET station_id = station_id - 1 "
                                                    "WHERE line_id = ? "
                                                    "AND station_id >= ? "
                                                    "ORDER BY station_id ASC;";
 
+    /**
+     * @brief for a given range of station, increase the station_id of one.
+     * Generally used before inserting a station, to leave a gap to inster it
+     * 
+     * @param line_id id of the line to do the action in
+     * @param station_id all stations with an id greater or equal to the given one will have their station id increased by one
+     */
     static const char *range_station_id_increase = "UPDATE stations SET station_id = station_id + 1 "
                                                    "WHERE line_id = ? "
                                                    "AND station_id >= ? "
                                                    "ORDER BY station_id DESC;";
 
+    /**
+     * @brief Change the travel_time_to_next_station of a station
+     * 
+     * @param line_id id of the line where the station is
+     * @param station_id id of the station to update
+     */
     static const char *update_travel_time = "UPDATE stations SET travel_time_to_next_station = ? "
                                             "WHERE line_id = ? "
                                             "AND station_id = ? ;";
-
-    static const char *insert_station = "INSERT INTO stations(line_id, station_id, station_name, travel_time_to_next_station) "
-                                        "VALUES (?, ?, ?, ?)";
-
 } // namespace SPS
 
 namespace STATIONS

@@ -5,18 +5,40 @@
 
 namespace NPS //Network Prepared Statement
 {
+    /**
+     * @return all lines in the network
+     */
     static const char *select_all_lines = "SELECT * FROM network "
                                           "ORDER BY line_id ASC";
 
+    /**
+     * @param line_id id of the searched line
+     * @return all the lines in the network with the given line id
+     */
     static const char *select_by_line_id = "SELECT * FROM network "
                                            "WHERE line_id = ? ;";
 
+    /**
+     * @param line_id name of the searched line
+     * @return all the lines in the network with the given line name
+     */
     static const char *select_by_line_name = "SELECT * FROM network "
                                              "WHERE line_name = ? ;";
 
+    /**
+     * @brief Insert a new line in the network
+     * 
+     * @param line_id id of the new line (must be unique)
+     * @param line_name name of the new line (must be unique)
+     */
     static const char *insert_line = "INSERT INTO network(line_id, line_name) "
                                      "VALUES (?, ?)";
 
+    /**
+     * @brief Delete a line from the network
+     * 
+     * @param line_id id of the line to delete
+     */
     static const char *delete_line = "DELETE FROM network "
                                      "WHERE line_id = ? ;";
 
@@ -26,8 +48,8 @@ namespace
 {
     /**
      * @brief Complete process for the user to add the first stations of a newly created line.
-     * Should be called only after creating a new line.
-     * Works recursively, calls itself until the user added all the needed stations
+     *  Works recursively, calls itself until the user added all the needed stations
+     * SHOULD ONLY BE CALLED WITH AN EMPTY LINE.
      * 
      * @param con Used to execute the prepared statements
      * @param stmt Used to communicate with the database
