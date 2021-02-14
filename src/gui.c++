@@ -2,25 +2,23 @@
 #include "network.h"
 #include "stations.h"
 #include "rolling_stock.h"
+#include "other.h"
 
 #include <iostream>
-#include <limits>
-#include <limits>
 
 namespace GUI
 {
     bool execute_query(sql::Connection *con,
-                        sql::Statement *stmt)
+                       sql::Statement *stmt)
     {
-        std::cout << "\e[1;1H\e[2J";
-        int choice;
-        std::cout << "what do you want to do ?\n\n"
+        std::cout << "\e[1;1H\e[2J"
+                  << "what do you want to do ?\n\n"
                   << "1) Network/stations\n"
                   << "2) rolling_stocks\n"
                   << "3) schedule\n"
                   << "0) exit\n"
                   << std::flush;
-        std::cin >> choice;
+        int choice = IO::get_int();
 
         switch (choice)
         {
@@ -36,19 +34,16 @@ namespace GUI
         default:
             return false;
         }
-        std::cout << "\nPress enter to continue"
-                  << std::flush;
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        char c = getchar();
+
+        IO::wait_input();
         return true;
     }
 
     void modify_network(sql::Connection *con,
                         sql::Statement *stmt)
     {
-        int choice;
-        char c;
-        std::cout << "what changes to do in the network ?\n\n"
+        std::cout << "\e[1;1H\e[2J"
+                  << "what changes to do in the network ?\n\n"
                   << "1) Add a new line\n"
                   << "2) Show lines in the network\n"
                   << "3) Remove a line\n"
@@ -57,7 +52,7 @@ namespace GUI
                   << "6) Remove a station from an existing line\n"
                   << "0) cancel\n"
                   << std::flush;
-        std::cin >> choice;
+        int choice = IO::get_int();
 
         switch (choice)
         {
@@ -85,15 +80,14 @@ namespace GUI
     void modify_rolling_stocks(sql::Connection *con,
                                sql::Statement *stmt)
     {
-        int choice;
-        char c;
-        std::cout << "what changed to do on the rolling_stocks ?\n\n"
+        std::cout << "\e[1;1H\e[2J"
+                  << "what changed to do on the rolling_stocks ?\n\n"
                   << "1) Add a new train to rolling stock\n"
                   << "2) Show rolling stocks\n"
                   << "3) Remove a train from rolling stock\n"
                   << "4) Show train data and schedule\n"
                   << std::flush;
-        std::cin >> choice;
+        int choice = IO::get_int();
 
         switch (choice)
         {

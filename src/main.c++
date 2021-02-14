@@ -16,7 +16,7 @@ int main()
         INI::connection(&driver, &con, &stmt);
         INI::verify_tables_existence(&con, stmt);
 
-        //querries executions
+        //queries executions
         while (GUI::execute_query(con, stmt))
             ;
 

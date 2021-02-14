@@ -1,11 +1,11 @@
 #include "network.h"
 #include "stations.h"
+#include "other.h"
 
 #include <iostream>
 #include <iomanip>
 #include <string>
 #include <exception>
-#include <limits>
 
 namespace NETWORK
 {
@@ -42,10 +42,10 @@ namespace NETWORK
                          sql::ResultSet **searched_line)
     {
         //Ask for the searched line
-        std::string reply;
+
         std::cout << "Entre the name or number of the line you want to remove\n"
                   << std::flush;
-        std::cin >> reply;
+        std::string reply = IO::get_string();
 
         try
         {
@@ -86,7 +86,7 @@ namespace NETWORK
         sql::ResultSet *lines_with_id;
         do
         {
-            std::cin >> new_line_id;
+            new_line_id = IO::get_int();
             select_by_line_id->setInt(1, new_line_id);
             lines_with_id = select_by_line_id->executeQuery();
             if (lines_with_id->rowsCount() != 0)
@@ -104,7 +104,7 @@ namespace NETWORK
         sql::ResultSet *lines_with_name;
         do
         {
-            std::cin >> new_line_name;
+            new_line_name = IO::get_string();
             //if station name is over 20 characters (column limit), remove the end
             if (new_line_name.size() > 20)
                 new_line_name.erase(new_line_name.begin() + 19, new_line_name.end());
@@ -155,8 +155,7 @@ namespace NETWORK
                       << std::flush;
 
             //ask for confirmation to prevent mistakes
-            std::string confirmation;
-            std::cin >> confirmation;
+            std::string confirmation = IO::get_string();
             if (std::toupper(confirmation[0]) == 'Y')
             {
                 sql::PreparedStatement *delete_line = con->prepareStatement(NPS::delete_line);
@@ -188,7 +187,8 @@ namespace
         if (station_id != 1)
             STATIONS::output_stations(con, line_id);
 
-        std::cout << "\n\nAdding station " << station_id << " of line " << station_id << '\n';
+        std::cout << "\e[1;1H\e[2J"
+                  << "\n\nAdding station " << station_id << " of line " << line_id << '\n';
 
         //Ask for the station name (need to be unique)
         std::cout << "Provide a name for this new station (has to be unique within the line)\n"
@@ -199,7 +199,7 @@ namespace
         sql::ResultSet *same_station_name;
         do
         {
-            std::cin >> new_station_name;
+            new_station_name = IO::get_string();
             //if station name is over 20 characters (column limit), remove the end
             if (new_station_name.size() > 20)
                 new_station_name.erase(new_station_name.begin() + 19, new_station_name.end());
@@ -213,10 +213,10 @@ namespace
         delete same_station_name;
 
         //ask for the time to the next station (0 if last station of the line)
-        unsigned int seconds_to_next_station, temp_min, temp_sec;
+
         std::cout << "indicates the time to the next station minutes (enter) seconds (0 (enter) 0) if last station" << std::endl;
-        std::cin >> temp_min >> temp_sec;
-        seconds_to_next_station = temp_min * 60 + temp_sec;
+        int seconds_to_next_station = IO::get_int() * 60 + IO::get_int();
+        seconds_to_next_station *= (seconds_to_next_station >= 0); //to prevent negative travel times
 
         STATIONS::insert_valid_station(con, stmt, line_id, station_id, new_station_name.c_str(), seconds_to_station, 0);
 
