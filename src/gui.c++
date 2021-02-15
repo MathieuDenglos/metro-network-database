@@ -85,7 +85,7 @@ namespace GUI
                   << "1) Add a new train to rolling stock\n"
                   << "2) Show rolling stocks\n"
                   << "3) Remove a train from rolling stock\n"
-                  << "4) Show train data and schedule\n"
+                  << "0) cancel\n"
                   << std::flush;
         int choice = IO::get_int();
 
@@ -98,10 +98,7 @@ namespace GUI
             RS::show_rolling_stock(stmt);
             break;
         case 3:
-            RS::remove_material_id(stmt);
-            break;
-        case 4:
-            RS::show_material_id(stmt);
+            RS::remove_material(con, stmt);
             break;
         }
     }

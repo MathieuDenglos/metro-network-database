@@ -52,10 +52,10 @@ namespace RS
         return train_count;
     }
 
-    std::size_t ask_material_id(sql::Connection *con,
-                                sql::Statement *stmt,
-                                sql::ResultSet **searched_material,
-                                bool unique_result)
+    std::size_t ask_material(sql::Connection *con,
+                             sql::Statement *stmt,
+                             sql::ResultSet **searched_material,
+                             bool unique_result)
     {
         //Ask for the searched train
         std::cout << "Enter the model, or train ID\n"
@@ -101,16 +101,9 @@ namespace RS
                                      ((*searched_material)->getString("model") == reply) ? reply : "",
                                      ((*searched_material)->getString("manufacturer") == reply) ? reply : "");
 
-            std::cout << "please enter the train id from above list!\n"
+            std::cout << "\nplease enter the train id from above list!\n"
                       << std::flush;
             int material_id = IO::get_int();
-
-            //delete all rows
-            do
-            {
-                if ((*searched_material)->getInt("material_id") != material_id)
-                    (*searched_material)->rowDeleted();
-            } while ((*searched_material)->next());
 
             //If the user did a research by model → ask for a material id and search by the model and the material id
             if ((*searched_material)->getString("model") == reply)
@@ -183,11 +176,29 @@ namespace RS
     {
     }
 
-    void remove_material_id(sql::Statement *stmt)
+    void remove_material(sql::Connection *con,
+                         sql::Statement *stmt)
     {
-    }
+        sql::ResultSet *searched_material;
 
-    void show_material_id(sql::Statement *stmt)
-    {
+        //ask for the material to remove from the list
+        RS::output_rolling_stock(con, stmt);
+        std::cout << "\n\nSelect the material to delete\n"
+                  << std::flush;
+        if (RS::ask_material(con, stmt, &searched_material, true))
+        {
+            //if a material was found delete it
+            searched_material->next();
+            sql::PreparedStatement *delete_material = con->prepareStatement(RSPS::delete_material);
+            delete_material->setInt(1, searched_material->getInt("material_id"));
+            delete_material->execute();
+            delete delete_material;
+        }
+        //otherwise just give an error message and return
+        else
+            std::cout << "No material to delete with given information"
+                      << std::flush;
+
+        delete searched_material;
     }
 } // namespace RS

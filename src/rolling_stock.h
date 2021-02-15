@@ -42,7 +42,7 @@ namespace RSPS //Rolling Stock Prepared Statements
      * @param material_id id of the material
      * @return the material with given model and id
      */
-    static const char *select_by_model_and_material_id = "SELECT * FROM network "
+    static const char *select_by_model_and_material_id = "SELECT * FROM rolling_stock "
                                                          "WHERE model = ? "
                                                          "AND material_id = ? ;";
 
@@ -51,7 +51,7 @@ namespace RSPS //Rolling Stock Prepared Statements
      * @param material_id id of the material
      * @return the material with given modemanufacturer name and (material) id
      */
-    static const char *select_by_manufacturer_and_material_id = "SELECT * FROM network "
+    static const char *select_by_manufacturer_and_material_id = "SELECT * FROM rolling_stock "
                                                                 "WHERE manufacturer = ? "
                                                                 "AND material_id = ? ;";
 
@@ -64,6 +64,15 @@ namespace RSPS //Rolling Stock Prepared Statements
      */
     static const char *insert_material = "INSERT INTO rolling_stock(material_id, manufacturer, model) "
                                          "VALUES (?, ?, ?)";
+
+    /**
+     * @brief Delete a station from a line
+     * 
+     * @param line_id id of the line where the station to delete is
+     * @param station_id id of the station to delete
+     */
+    static const char *delete_material = "DELETE FROM rolling_stock "
+                                         "WHERE material_id = ? ;";
 
 } // namespace RSPS
 
@@ -92,10 +101,10 @@ namespace RS
      * @param unique_result whether we're searching for a unique train or potentially multiple
      * @return the amount of stations in given line with entered station name or id (normally 0 or 1)
      */
-    std::size_t ask_material_id(sql::Connection *con,
-                                sql::Statement *stmt,
-                                sql::ResultSet **searched_material,
-                                bool unique_result);
+    std::size_t ask_material(sql::Connection *con,
+                             sql::Statement *stmt,
+                             sql::ResultSet **searched_material,
+                             bool unique_result);
 
     /**
      * @brief Complete process for the user to add a new material in the rolling stock
@@ -108,9 +117,14 @@ namespace RS
 
     void show_rolling_stock(sql::Statement *stmt);
 
-    void remove_material_id(sql::Statement *stmt);
-
-    void show_material_id(sql::Statement *stmt);
+    /**
+     * @brief Complete process for the user to remove a material from the rolling stock
+     * 
+     * @param con Used to execute the prepared statements
+     * @param stmt Used to communicate with the database
+     */
+    void remove_material(sql::Connection *con,
+                         sql::Statement *stmt);
 } // namespace RS
 
 #endif //ROLLING_STOCK_H
