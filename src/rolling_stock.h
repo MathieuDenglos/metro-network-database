@@ -55,6 +55,16 @@ namespace RSPS //Rolling Stock Prepared Statements
                                                                 "WHERE manufacturer = ? "
                                                                 "AND material_id = ? ;";
 
+    /**
+     * @brief Insert a newmaterial in the network
+     * 
+     * @param material_id id of the new material (must be unique)
+     * @param manufacturer name of the material manufacturer
+     * @param model 
+     */
+    static const char *insert_material = "INSERT INTO rolling_stock(material_id, manufacturer, model) "
+                                         "VALUES (?, ?, ?)";
+
 } // namespace RSPS
 
 namespace RS
@@ -87,7 +97,14 @@ namespace RS
                                 sql::ResultSet **searched_material,
                                 bool unique_result);
 
-    void add_material_id(sql::Statement *stmt);
+    /**
+     * @brief Complete process for the user to add a new material in the rolling stock
+     * 
+     * @param con Used to execute the prepared statements
+     * @param stmt Used to communicate with the database
+     */
+    void add_material(sql::Connection *con,
+                      sql::Statement *stmt);
 
     void show_rolling_stock(sql::Statement *stmt);
 

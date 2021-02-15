@@ -92,7 +92,7 @@ namespace GUI
         switch (choice)
         {
         case 1:
-            RS::add_material_id(stmt);
+            RS::add_material(con, stmt);
             break;
         case 2:
             RS::show_rolling_stock(stmt);

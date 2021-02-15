@@ -42,9 +42,9 @@ namespace RS
             std::cout << "material_id   model            manufacturer\n";
 
         while (existing_rolling_stock->next())
-            std::cout << "    " << std::setw(5) << std::right << std::setfill(' ') << existing_rolling_stock->getInt("material_id")
-                      << "  " << std::setw(16) << std::left << std::setfill(' ') << existing_rolling_stock->getString("model")
-                      << "  " << std::setw(12) << std::left << std::setfill(' ') << existing_rolling_stock->getString("manufacturer") << '\n';
+            std::cout << "    " << std::setw(4) << std::right << std::setfill('0') << existing_rolling_stock->getInt("material_id")
+                      << "      " << std::setw(16) << std::left << std::setfill(' ') << existing_rolling_stock->getString("model")
+                      << " " << std::setw(12) << std::left << std::setfill(' ') << existing_rolling_stock->getString("manufacturer") << '\n';
 
         std::cout << std::flush;
 
@@ -134,8 +134,49 @@ namespace RS
         return (*searched_material)->rowsCount();
     }
 
-    void add_material_id(sql::Statement *stmt)
+    void add_material(sql::Connection *con,
+                      sql::Statement *stmt)
     {
+        //output the rolling stock
+        RS::output_rolling_stock(con, stmt);
+
+        std::cout << "\e[1;1H\e[2J"
+                  << "\n\nPlease provide an id to the new material (has to be unique\n"
+                  << std::flush;
+
+        //ask for the id of the new material
+        int new_material_id;
+        sql::PreparedStatement *select_by_material_id = con->prepareStatement(RSPS::select_by_material_id);
+        sql::ResultSet *material_with_id;
+        do
+        {
+            new_material_id = IO::get_int();
+            select_by_material_id->setInt(1, new_material_id);
+            material_with_id = select_by_material_id->executeQuery();
+            if (material_with_id->rowsCount() != 0)
+                std::cout << "this material already exists please select another material id\n"
+                          << std::flush;
+        } while (material_with_id->rowsCount() != 0);
+        delete select_by_material_id;
+        delete material_with_id;
+
+        //ask for the model of the new material
+        std::cout << "\ninput the model of the material with id : " << new_material_id
+                  << std::endl;
+        std::string new_model = IO::get_string();
+
+        //ask for the manufacturer of the new material
+        std::cout << "\ninput the manufacturer of the material with id : " << new_material_id
+                  << std::endl;
+        std::string new_manufacturer = IO::get_string();
+
+        //Insert the new material with all the user input data
+        sql::PreparedStatement *insert_material = con->prepareStatement(RSPS::insert_material);
+        insert_material->setInt(1, new_material_id);
+        insert_material->setString(2, new_manufacturer);
+        insert_material->setString(3, new_model);
+        insert_material->execute();
+        delete insert_material;
     }
 
     void show_rolling_stock(sql::Statement *stmt)
