@@ -10,7 +10,7 @@ namespace SPS //Stations Prepared Statements
      * @param station_name name of the searched station
      * @return all the stations in the network with the given line id and station name
      */
-    static const char *search_by_station_name_and_line_id = "SELECT * FROM stations "
+    static const char *select_by_station_name_and_line_id = "SELECT * FROM stations "
                                                             "WHERE line_id = ? "
                                                             "AND station_name LIKE ?;";
 
@@ -19,7 +19,7 @@ namespace SPS //Stations Prepared Statements
      * @param station_id id of the searched station
      * @return all the stations in the network with the given line id and station id
      */
-    static const char *search_by_station_id_and_line_id = "SELECT * FROM stations "
+    static const char *select_by_station_id_and_line_id = "SELECT * FROM stations "
                                                           "WHERE line_id = ? "
                                                           "AND station_id = ?;";
 
@@ -27,7 +27,7 @@ namespace SPS //Stations Prepared Statements
      * @param line_id id of the line of searched station
      * @return all the stations in the line of the given line id 
      */
-    static const char *search_by_line_id = "SELECT * FROM stations "
+    static const char *select_by_line_id = "SELECT * FROM stations "
                                            "WHERE line_id = ? "
                                            "ORDER BY station_id ASC";
 
@@ -92,7 +92,7 @@ namespace STATIONS
     /**
      * @brief output all stations from a given line
      * 
-     * @param stmt Used to communicate with the database
+     * @param con Used to execute the prepared statements
      * @param line_id id of the line
      * @return amount of stations in the given line 
      */
@@ -102,6 +102,7 @@ namespace STATIONS
     /**
      * @brief ask for a specific station of a given line
      * 
+     * @param con Used to execute the prepared statements
      * @param stmt Used to communicate with the database
      * @param searched_station Resultset to store the stations found
      * @param line_id id of the line to search a station in
@@ -113,52 +114,6 @@ namespace STATIONS
                             int line_id);
 
     /**
-     * @brief insert a valid station in a line.
-     * STATION MUST BE VALID TO PREVENT UNEXPECTED TERMINATION
-     * 
-     * @param con Used to execute the prepared statements
-     * @param stmt Used to communicate with the database
-     * @param line_id line id of the line to add a station in (must be an already existing line)
-     * @param station_id id of the station to add (stations within a line must be unique and counting)
-     * @param station_name name of the station (must be unique within a line)
-     * @param seconds_to_station time in seconds to station (0 if first station)
-     * @param seconds_to_next_station time in seconds to next station (0 if last station)
-     */
-    void insert_valid_station(sql::Connection *con,
-                              sql::Statement *stmt,
-                              int line_id,
-                              int station_id,
-                              const char *station_name,
-                              int seconds_to_station,
-                              int seconds_to_next_station);
-
-    /**
-     * @brief remove a valid existing station from a line
-     * STATION MUST BE VALID TO PREVENT UNEXPECTED TERMINATION
-     * 
-     * @param stmt Used to communicate with the database
-     * @param line_id line id of the line from which to remove a station
-     * @param station_id station id of the station to remove in the line
-     * @param is_last_station whether the station to remove is the last of the line
-     * @param is_first_station whether the station to remove is the first of the list
-     * @param seconds_from_last_to_next time in seconds to from previous station to station afterward (only if the station is neither the first nor last one)
-     */
-    void remove_valid_station(sql::Connection *con, sql::Statement *stmt,
-                              int line_id,
-                              int station_id,
-                              bool is_last_station,
-                              bool is_first_station,
-                              int seconds_from_last_to_next);
-
-    /**
-     * @brief ask for a line and show all the stations from entered line
-     * 
-     * @param stmt Used to communicate with the database
-     */
-    void show_line_stations(sql::Connection *con,
-                            sql::Statement *stmt);
-
-    /**
      * @brief Complete process for the user to add a new station in a line
      * 
      * @param con Used to execute the prepared statements
@@ -166,6 +121,15 @@ namespace STATIONS
      */
     void add_station(sql::Connection *con,
                      sql::Statement *stmt);
+
+    /**
+     * @brief ask for a line and show all the stations from entered line
+     * 
+     * @param con Used to execute the prepared statements
+     * @param stmt Used to communicate with the database
+     */
+    void show_line_stations(sql::Connection *con,
+                            sql::Statement *stmt);
 
     /**
      * @brief Complete process for the user to remove a station from the network
@@ -176,6 +140,55 @@ namespace STATIONS
     void remove_station(sql::Connection *con,
                         sql::Statement *stmt);
 
+    /**
+     * @brief insert a valid station in a line.
+     * STATION MUST BE VALID TO PREVENT UNEXPECTED TERMINATION
+     * 
+     * @param con Used to execute the prepared statements
+     * @param line_id line id of the line to add a station in (must be an already existing line)
+     * @param station_id id of the station to add (stations within a line must be unique and counting)
+     * @param station_name name of the station (must be unique within a line)
+     * @param seconds_to_station time in seconds to station (0 if first station)
+     * @param seconds_to_next_station time in seconds to next station (0 if last station)
+     */
+    void insert_valid_station(sql::Connection *con,
+                              int line_id,
+                              int station_id,
+                              const char *station_name,
+                              int seconds_to_station,
+                              int seconds_to_next_station);
+
+    /**
+     * @brief remove a valid existing station from a line
+     * STATION MUST BE VALID TO PREVENT UNEXPECTED TERMINATION
+     * 
+     * @param con Used to execute the prepared statements
+     * @param line_id line id of the line from which to remove a station
+     * @param station_id station id of the station to remove in the line
+     * @param is_last_station whether the station to remove is the last of the line
+     * @param is_first_station whether the station to remove is the first of the list
+     * @param seconds_from_last_to_next time in seconds to from previous station to station afterward (only if the station is neither the first nor last one)
+     */
+    void remove_valid_station(sql::Connection *con,
+                              int line_id,
+                              int station_id,
+                              bool is_last_station,
+                              bool is_first_station,
+                              int seconds_from_last_to_next);
+
+    /**
+     * @brief Complete process for the user to append into an already existing line
+     * 
+     * @param con Used to execute the prepared statements
+     * @param line_id id of the line to add stations in
+     * @param station_id id of the station to start with (must be 1 above the id of the last station)
+     * @param seconds_to_station time in seconds to the station that's about to be added (0 if no stations yet)
+     */
+    void add_stations_in_new_line(sql::Connection *con,
+                                  sql::Statement *stmt,
+                                  int line_id,
+                                  int station_id = 1,
+                                  int seconds_to_station = 0);
 } // namespace STATIONS
 
 #endif //STATIONS_H

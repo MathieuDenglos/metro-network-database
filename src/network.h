@@ -44,26 +44,6 @@ namespace NPS //Network Prepared Statement
 
 } // namespace NPS
 
-namespace
-{
-    /**
-     * @brief Complete process for the user to add the first stations of a newly created line.
-     *  Works recursively, calls itself until the user added all the needed stations
-     * SHOULD ONLY BE CALLED WITH AN EMPTY LINE.
-     * 
-     * @param con Used to execute the prepared statements
-     * @param stmt Used to communicate with the database
-     * @param line_id id of the line to add stations in
-     * @param station_id id of the station (starts at 1, automatically increment at each recursive call)
-     * @param seconds_to_station time in seconds to the station that's about to be added (0 for the first call)
-     */
-    void add_stations_in_new_line(sql::Connection *con,
-                                  sql::Statement *stmt,
-                                  int line_id,
-                                  int station_id = 1,
-                                  int seconds_to_station = 0);
-} // namespace
-
 namespace NETWORK
 {
     /**
