@@ -1,31 +1,45 @@
 #include "rolling_stock.h"
+#include "other.h"
 
 #include <iostream>
 #include <iomanip>
 
 namespace RS
 {
-    std::size_t output_rolling_stocks(sql::Statement *stmt,
-                                      std::string model /* = "" */,
-                                      std::string manufacturer /* = "" */)
+    std::size_t output_rolling_stock(sql::Connection *con,
+                                     sql::Statement *stmt,
+                                     std::string model /* = "" */,
+                                     std::string manufacturer /* = "" */)
     {
         //first grab all the rolling stock
         sql::ResultSet *existing_rolling_stock;
         if (manufacturer != "")
-            existing_rolling_stock = stmt->executeQuery("SELECT * FROM rolling_stock WHERE manufacturer = " + manufacturer + " ORDER BY material_id ASC");
+        {
+            sql::PreparedStatement *select_by_manufacturer = con->prepareStatement(RSPS::select_by_manufacturer);
+            select_by_manufacturer->setString(1, manufacturer);
+            existing_rolling_stock = select_by_manufacturer->executeQuery();
+            delete select_by_manufacturer;
+        }
         else if (model != "")
-            existing_rolling_stock = stmt->executeQuery("SELECT * FROM rolling_stock WHERE model = " + model + " ORDER BY material_id ASC");
+        {
+            sql::PreparedStatement *select_by_model = con->prepareStatement(RSPS::select_by_model);
+            select_by_model->setString(1, model);
+            existing_rolling_stock = select_by_model->executeQuery();
+            delete select_by_model;
+        }
         else
-            existing_rolling_stock = stmt->executeQuery("SELECT * FROM rolling_stock ORDER BY material_id ASC");
+            existing_rolling_stock = stmt->executeQuery(RSPS::select_all_rolling_stock);
         std::size_t train_count = existing_rolling_stock->rowsCount();
 
-        //output the existing lines or a message if there aren't any
-        if (train_count == 0)
-            std::cout << "No rolling stocks yet\n\n";
-
+        //output the existing lines or a message if there aren't any/any with given research
+        if (train_count == 0 && model != "")
+            std::cout << "No rolling stocks of given model\n\n";
+        else if (train_count == 0 && manufacturer != "")
+            std::cout << "No rolling stocks of given manufacturer name\n\n";
+        else if (train_count == 0)
+            std::cout << "No material in the rolling stock yet\n\n";
         else
-            std::cout << "The rolling_stock already have " << train_count << " trains\n\n"
-                      << "train_id   model            manufacturer\n";
+            std::cout << "material_id   model            manufacturer\n";
 
         while (existing_rolling_stock->next())
             std::cout << "    " << std::setw(5) << std::right << std::setfill(' ') << existing_rolling_stock->getInt("material_id")
@@ -38,71 +52,101 @@ namespace RS
         return train_count;
     }
 
-    std::size_t ask_train(sql::ResultSet **search_train,
-                          sql::Statement *stmt,
-                          bool unique_result)
+    std::size_t ask_material_id(sql::Connection *con,
+                                sql::Statement *stmt,
+                                sql::ResultSet **searched_material,
+                                bool unique_result)
     {
         //Ask for the searched train
-        std::string reply;
         std::cout << "Enter the model, or train ID\n"
                   << std::flush;
-        std::cin >> reply;
+        std::string reply = IO::get_string();
 
         try
         {
-            //convert the reply to an int and search by line_id if std::stoi() doesn't throw
+            //convert the reply to an int and search by rolling_stock_id if std::stoi() doesn't throw
             int searched_id = std::stoi(reply);
-            *search_train = stmt->executeQuery("SELECT * FROM network WHERE material_id = " + reply + " ;");
+            sql::PreparedStatement *select_by_material_id = con->prepareStatement(RSPS::select_by_material_id);
+            select_by_material_id->setInt(1, searched_id);
+            *searched_material = select_by_material_id->executeQuery();
+            delete select_by_material_id;
         }
         catch (const std::invalid_argument &e)
         {
-            //if the function throw, it means that the user did a research by line_name
-            *search_train = stmt->executeQuery("SELECT * FROM network WHERE model = \'" + reply + "\' ;");
+            //if the function throw, it means that the user did a research by model or manufacturer
+            sql::PreparedStatement *select_by_manufacturer = con->prepareStatement(RSPS::select_by_manufacturer),
+                                   *select_by_model = con->prepareStatement(RSPS::select_by_model);
+            select_by_manufacturer->setString(1, reply);
+            select_by_model->setString(1, reply);
+            *searched_material = select_by_model->executeQuery();
+            if ((*searched_material)->rowsCount() == 0)
+                *searched_material = select_by_manufacturer->executeQuery();
+            delete select_by_manufacturer, select_by_model;
         }
         catch (const std::out_of_range &e)
         {
             //if the given value is too big, return an empty list
-            *search_train = stmt->executeQuery("SELECT NULL LIMIT 0;");
+            *searched_material = stmt->executeQuery("SELECT NULL LIMIT 0;");
         }
 
-        if (unique_result && (*search_train)->rowsCount() <= 1)
+        //if we search for a single result and we found multiple, ask the user to input the material id
+        if (unique_result && (*searched_material)->rowsCount() > 1)
         {
-            (*search_train)->next();
-            int material_id;
+            (*searched_material)->next();
             std::cout << "multiple trains selected in a unique query, here are the different trains selected\n"
                       << std::flush;
 
-            RS::output_rolling_stocks(stmt,
-                                      ((*search_train)->getString("model") == reply) ? reply : "",
-                                      ((*search_train)->getString("manufacturer") == reply) ? reply : "");
+            //output all the rolling_stock with the searched model or manufacturer
+            RS::output_rolling_stock(con, stmt,
+                                     ((*searched_material)->getString("model") == reply) ? reply : "",
+                                     ((*searched_material)->getString("manufacturer") == reply) ? reply : "");
 
             std::cout << "please enter the train id from above list!\n"
                       << std::flush;
+            int material_id = IO::get_int();
 
-            std::cin >> material_id;
+            //delete all rows
+            do
+            {
+                if ((*searched_material)->getInt("material_id") != material_id)
+                    (*searched_material)->rowDeleted();
+            } while ((*searched_material)->next());
 
-            if ((*search_train)->getString("model") == reply)
-                *search_train = stmt->executeQuery("SELECT * FROM network WHERE model = \'" + reply + "\' AND material_id = " + std::to_string(material_id) + " ;");
+            //If the user did a research by model → ask for a material id and search by the model and the material id
+            if ((*searched_material)->getString("model") == reply)
+            {
+                sql::PreparedStatement *select_by_model_and_material_id = con->prepareStatement(RSPS::select_by_model_and_material_id);
+                select_by_model_and_material_id->setString(1, reply);
+                select_by_model_and_material_id->setInt(2, material_id);
+                *searched_material = select_by_model_and_material_id->executeQuery();
+                delete select_by_model_and_material_id;
+            }
+            //If the user did a research by manufacturer → ask for a material id and search by the manufacturer and the material id
             else
-                *search_train = stmt->executeQuery("SELECT * FROM network WHERE manufacturer = \'" + reply + "\' AND material_id = " + std::to_string(material_id) + " ;");
+            {
+                sql::PreparedStatement *select_by_manufacturer_and_material_id = con->prepareStatement(RSPS::select_by_manufacturer_and_material_id);
+                select_by_manufacturer_and_material_id->setString(1, reply);
+                select_by_manufacturer_and_material_id->setInt(2, material_id);
+                *searched_material = select_by_manufacturer_and_material_id->executeQuery();
+                delete select_by_manufacturer_and_material_id;
+            }
         }
-
-        return (*search_train)->rowsCount();
+        return (*searched_material)->rowsCount();
     }
 
-    void add_train(sql::Statement *stmt)
+    void add_material_id(sql::Statement *stmt)
     {
     }
 
-    void show_rolling_stocks(sql::Statement *stmt)
+    void show_rolling_stock(sql::Statement *stmt)
     {
     }
 
-    void remove_train(sql::Statement *stmt)
+    void remove_material_id(sql::Statement *stmt)
     {
     }
 
-    void show_train(sql::Statement *stmt)
+    void show_material_id(sql::Statement *stmt)
     {
     }
 } // namespace RS

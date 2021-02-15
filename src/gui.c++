@@ -14,7 +14,7 @@ namespace GUI
         std::cout << "\e[1;1H\e[2J"
                   << "what do you want to do ?\n\n"
                   << "1) Network/stations\n"
-                  << "2) rolling_stocks\n"
+                  << "2) rolling_stock\n"
                   << "3) schedule\n"
                   << "0) exit\n"
                   << std::flush;
@@ -26,7 +26,7 @@ namespace GUI
             GUI::modify_network(con, stmt);
             break;
         case 2:
-            GUI::modify_rolling_stocks(con, stmt);
+            GUI::modify_rolling_stock(con, stmt);
             break;
         case 3:
             std::cout << "to implement" << std::endl;
@@ -77,11 +77,11 @@ namespace GUI
         }
     }
 
-    void modify_rolling_stocks(sql::Connection *con,
-                               sql::Statement *stmt)
+    void modify_rolling_stock(sql::Connection *con,
+                              sql::Statement *stmt)
     {
         std::cout << "\e[1;1H\e[2J"
-                  << "what changed to do on the rolling_stocks ?\n\n"
+                  << "what changed to do on the rolling_stock ?\n\n"
                   << "1) Add a new train to rolling stock\n"
                   << "2) Show rolling stocks\n"
                   << "3) Remove a train from rolling stock\n"
@@ -92,16 +92,16 @@ namespace GUI
         switch (choice)
         {
         case 1:
-            RS::add_train(stmt);
+            RS::add_material_id(stmt);
             break;
         case 2:
-            RS::show_rolling_stocks(stmt);
+            RS::show_rolling_stock(stmt);
             break;
         case 3:
-            RS::remove_train(stmt);
+            RS::remove_material_id(stmt);
             break;
         case 4:
-            RS::show_train(stmt);
+            RS::show_material_id(stmt);
             break;
         }
     }
