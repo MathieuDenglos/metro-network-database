@@ -185,7 +185,6 @@ namespace STATIONS
      * @param seconds_to_station time in seconds to the station that's about to be added (0 if no stations yet)
      */
     void add_stations_in_new_line(sql::Connection *con,
-                                  sql::Statement *stmt,
                                   int line_id,
                                   int station_id = 1,
                                   int seconds_to_station = 0);

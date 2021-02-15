@@ -129,7 +129,7 @@ namespace NETWORK
         delete insert_line;
 
         //Insert all the stations for the new line
-        STATIONS::add_stations_in_new_line(con, stmt, new_line_id);
+        STATIONS::add_stations_in_new_line(con, new_line_id);
     }
 
     void remove_line(sql::Connection *con,
