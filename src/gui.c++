@@ -95,7 +95,7 @@ namespace GUI
             RS::add_material(con, stmt);
             break;
         case 2:
-            RS::show_rolling_stock(stmt);
+            RS::output_rolling_stock(con, stmt);
             break;
         case 3:
             RS::remove_material(con, stmt);

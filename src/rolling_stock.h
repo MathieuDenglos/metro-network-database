@@ -115,8 +115,6 @@ namespace RS
     void add_material(sql::Connection *con,
                       sql::Statement *stmt);
 
-    void show_rolling_stock(sql::Statement *stmt);
-
     /**
      * @brief Complete process for the user to remove a material from the rolling stock
      * 

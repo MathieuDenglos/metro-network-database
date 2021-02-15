@@ -31,13 +31,18 @@ namespace RS
             existing_rolling_stock = stmt->executeQuery(RSPS::select_all_rolling_stock);
         std::size_t train_count = existing_rolling_stock->rowsCount();
 
+        std::cout << "\e[1;1H\e[2J" << std::flush;
+
         //output the existing lines or a message if there aren't any/any with given research
         if (train_count == 0 && model != "")
-            std::cout << "No rolling stocks of given model\n\n";
+            std::cout
+                << "No rolling stocks of given model\n\n";
         else if (train_count == 0 && manufacturer != "")
-            std::cout << "No rolling stocks of given manufacturer name\n\n";
+            std::cout
+                << "No rolling stocks of given manufacturer name\n\n";
         else if (train_count == 0)
-            std::cout << "No material in the rolling stock yet\n\n";
+            std::cout
+                << "No material in the rolling stock yet\n\n";
         else
             std::cout << "material_id   model            manufacturer\n";
 
@@ -93,15 +98,14 @@ namespace RS
         if (unique_result && (*searched_material)->rowsCount() > 1)
         {
             (*searched_material)->next();
-            std::cout << "multiple trains selected in a unique query, here are the different trains selected\n"
-                      << std::flush;
 
             //output all the rolling_stock with the searched model or manufacturer
             RS::output_rolling_stock(con, stmt,
                                      ((*searched_material)->getString("model") == reply) ? reply : "",
                                      ((*searched_material)->getString("manufacturer") == reply) ? reply : "");
 
-            std::cout << "\nplease enter the train id from above list!\n"
+            std::cout << "\nmultiple trains selected in a unique query, here are the different trains selected"
+                      << "\nplease enter the train id from above list!\n"
                       << std::flush;
             int material_id = IO::get_int();
 
@@ -133,8 +137,7 @@ namespace RS
         //output the rolling stock
         RS::output_rolling_stock(con, stmt);
 
-        std::cout << "\e[1;1H\e[2J"
-                  << "\n\nPlease provide an id to the new material (has to be unique\n"
+        std::cout << "\n\nPlease provide an id to the new material (has to be unique\n"
                   << std::flush;
 
         //ask for the id of the new material
@@ -170,10 +173,6 @@ namespace RS
         insert_material->setString(3, new_model);
         insert_material->execute();
         delete insert_material;
-    }
-
-    void show_rolling_stock(sql::Statement *stmt)
-    {
     }
 
     void remove_material(sql::Connection *con,
